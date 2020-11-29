@@ -13,7 +13,7 @@ module FakeServiceBus
 
       def call(queue_name, params)
         queue = @queues.create(queue_name, params)
-        @responder.call queue_name do |xml|
+        body = @responder.call queue_name do |xml|
           xml.QueueDescription(
               :xmlns=>"http://schemas.microsoft.com/netservices/2010/10/servicebus/connect") do
             #  :xmlns:i=>"http://www.w3.org/2001/XMLSchema-instance") do
@@ -32,7 +32,7 @@ module FakeServiceBus
             xml.UpdatedAt Time.now.utc.iso8601
           end
         end
-        201
+        [201, body]
       end
 
     end

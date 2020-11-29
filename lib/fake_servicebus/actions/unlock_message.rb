@@ -1,6 +1,6 @@
 module FakeServiceBus
   module Actions
-    class DeleteMessage
+    class UnlockMessage
 
       def initialize(options = {})
         @server    = options.fetch(:server)
@@ -11,7 +11,7 @@ module FakeServiceBus
       def call(queue_name, lock_token, params)
         queue = @queues.get(queue_name)
 
-        queue.delete_message(lock_token)
+        queue.unlock_message(lock_token)
         200
       end
 

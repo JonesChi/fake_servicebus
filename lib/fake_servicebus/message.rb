@@ -4,18 +4,20 @@ require 'digest/sha1'
 module FakeServiceBus
   class Message
 
-    attr_reader :body, :id, :md5, :delay_seconds, :approximate_receive_count,
-    :sender_id, :approximate_first_receive_timestamp, :sent_timestamp
+    attr_reader :queue_name, :body, :sequence_number, :lock_token, :location, :delay_seconds, :approximate_receive_count,
+    :approximate_first_receive_timestamp, :sent_timestamp
     attr_accessor :visibility_timeout
 
     def initialize(options = {})
-      @body = options.fetch("MessageBody")
-      @id = options.fetch("Id") { SecureRandom.uuid }
-      @md5 = options.fetch("MD5") { Digest::MD5.hexdigest(@body) }
-      @sender_id = options.fetch("SenderId") { SecureRandom.uuid.delete('-').upcase[0...21] }
+      @queue_name = options.fetch("queue_name")
+      @body = options.fetch("body")
+      @sequence_number = options.fetch("sequence_number") { SecureRandom.random_number(9e5).to_i }
+      @lock_token = options.fetch("lock_token") { SecureRandom.uuid }
+      @location = "https://fake_servicebus/#{@queue_name}/messages/#{@sequence_number}/#{@lock_token}"
+
       @approximate_receive_count = 0
       @sent_timestamp = Time.now.to_i * 1000
-      @delay_seconds = options.fetch("DelaySeconds", 0).to_i
+      #@delay_seconds = options.fetch("DelaySeconds", 0).to_i
     end
 
     def expire!
@@ -46,15 +48,12 @@ module FakeServiceBus
 
     def attributes
       {
-        "SenderId" => sender_id,
-        "ApproximateFirstReceiveTimestamp" => approximate_first_receive_timestamp,
-        "ApproximateReceiveCount"=> approximate_receive_count,
+        "QueueName"=> queue_name,
+        "SequenceNumber"=> sequence_number,
+        "LockToken"=> lock_token,
+        "Location"=> location,
         "SentTimestamp"=> sent_timestamp
       }
-    end
-
-    def receipt
-      Digest::SHA1.hexdigest self.id
     end
 
   end

@@ -49,35 +49,28 @@ module FakeServiceBus
       with_lock do
         message = options.fetch(:message){ message_factory.new(options) }
         if message
-          @messages[message.receipt] = message
+          @messages[message.lock_token] = message
         end
         message
       end
     end
 
     def receive_message(options = {})
-      amount = Integer options.fetch("MaxNumberOfMessages") { "1" }
       visibility_timeout = Integer options.fetch("VisibilityTimeout") { default_visibility_timeout }
 
-      fail ReadCountOutOfRange, amount if amount > 10
+      return nil if @messages.empty?
 
-      return {} if @messages.empty?
-
-      result = {}
-
+      result = nil
       with_lock do
-        actual_amount = amount > published_size ? published_size : amount
         published_messages = @messages.values.select { |m| m.published? }
 
-        actual_amount.times do
-          message = published_messages.delete_at(rand(published_size))
-          @messages.delete(message.receipt)
-          unless check_message_for_dlq(message, options)
-            message.expire_at(visibility_timeout)
-            message.receive!
-            @messages_in_flight[message.receipt] = message
-            result[message.receipt] = message
-          end
+        message = published_messages.delete_at(rand(published_size))
+        @messages.delete(message.lock_token)
+        unless check_message_for_dlq(message, options)
+          message.expire_at(visibility_timeout)
+          message.receive!
+          @messages_in_flight[message.lock_token] = message
+          result = message
         end
       end
 
@@ -94,32 +87,28 @@ module FakeServiceBus
 
     def timeout_messages!
       with_lock do
-        expired = @messages_in_flight.inject({}) do |memo,(receipt,message)|
+        expired = @messages_in_flight.inject({}) do |memo,(lock_token,message)|
           if message.expired?
-            memo[receipt] = message
+            memo[lock_token] = message
           end
           memo
         end
-        expired.each do |receipt,message|
+        expired.each do |lock_token,message|
           message.expire!
-          @messages[receipt] = message
-          @messages_in_flight.delete(receipt)
+          @messages[lock_token] = message
+          @messages_in_flight.delete(lock_token)
         end
       end
     end
 
-    def change_message_visibility(receipt, visibility)
+    def unlock_message(lock_token)
       with_lock do
-        message = @messages_in_flight[receipt]
+        message = @messages_in_flight[lock_token]
         raise MessageNotInflight unless message
 
-        if visibility == 0
-          message.expire!
-          @messages[receipt] = message
-          @messages_in_flight.delete(receipt)
-        else
-          message.expire_at(visibility)
-        end
+        message.expire!
+        @messages[lock_token] = message
+        @messages_in_flight.delete(lock_token)
       end
     end
 
@@ -134,10 +123,10 @@ module FakeServiceBus
       end
     end
 
-    def delete_message(receipt)
+    def delete_message(lock_token)
       with_lock do
-        @messages.delete(receipt)
-        @messages_in_flight.delete(receipt)
+        @messages.delete(lock_token)
+        @messages_in_flight.delete(lock_token)
       end
     end
 

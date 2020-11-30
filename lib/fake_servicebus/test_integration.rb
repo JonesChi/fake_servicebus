@@ -10,11 +10,11 @@ module FakeServiceBus
     end
 
     def host
-      option :sqs_endpoint
+      option :servicebus_endpoint
     end
 
     def port
-      option :sqs_port
+      option :servicebus_port
     end
 
     def start
@@ -83,7 +83,7 @@ module FakeServiceBus
     end
 
     def logging
-      if (file = ENV["SQS_LOG"] || options[:log])
+      if (file = ENV["ServiceBus_LOG"] || options[:log])
         [ "--log", file ]
       else
         []

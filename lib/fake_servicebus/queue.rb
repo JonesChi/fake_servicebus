@@ -20,7 +20,7 @@ module FakeServiceBus
       @message_factory = options.fetch(:message_factory)
 
       @name = options.fetch(:name)
-      @queue_attributes = default_attibutes.merge(options.fetch(:attributes){ {} })
+      @queue_attributes = default_attibutes.merge(options.fetch('Attributes'){ {} })
       @lock = Monitor.new
       reset
     end
@@ -45,7 +45,6 @@ module FakeServiceBus
 
     def to_yaml
       {
-        "QueueName" => name,
         "Attributes" => queue_attributes,
       }
     end

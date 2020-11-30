@@ -53,7 +53,7 @@ module FakeServiceBus
           end
         end
 
-        queue = @queues.create(queue_name, {:attributes=>attributes})
+        queue = @queues.create(queue_name, {'Attributes'=>attributes})
         xml = Builder::XmlMarkup.new()
         body = @responder.queue xml, queue
         [201, body]

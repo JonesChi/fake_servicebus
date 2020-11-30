@@ -103,7 +103,7 @@ module FakeServiceBus
     private
 
     def deserialize(key)
-      @queue_objects[key] ||= Queue.new(storage[key].merge(message_factory: Message))
+      @queue_objects[key] ||= Queue.new(storage[key].merge(name: key, message_factory: Message))
     end
 
     def storage

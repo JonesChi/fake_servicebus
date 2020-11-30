@@ -1,23 +1,36 @@
-# Fake SQS [![Build Status](https://api.travis-ci.org/iain/fake_sqs.svg?branch=master)](http://travis-ci.org/iain/fake_sqs) [![Gem Version](https://badge.fury.io/rb/fake_sqs.svg)](https://badge.fury.io/rb/fake_sqs)
+# Fake Service Bus
 
-Fake SQS is a lightweight server that mocks the Amazon SQS API.
+Fake Service Bus is inspired by [Fake SQS](https://github.com/iain/fake_sqs) and it's also forked from [Fake SQS](https://github.com/iain/fake_sqs), thanks [Fake SQS](https://github.com/iain/fake_sqs).
 
-It is extremely useful for testing SQS applications in a sandbox environment without actually
-making calls to Amazon, which not only requires a network connection, but also costs
+Fake Service Bus is a lightweight server that mocks the Azure Service Bus API.
+
+It is extremely useful for testing Service Bus applications in a sandbox environment without actually
+making calls to Azure, which not only requires a network connection, but also costs
 money.
 
-Many features are supported and if you miss something, open a pull.
+Currently, only Queue APIs are supported
+* List queues
+* Create queue
+* Get queue
+* Delete queue
+* Send message to queue
+* Receive message from queue with timeout
+* Unlock message
+* Renew message
+* Delete message
+
+PRs are welcome.
 
 ## Installation
 
 ```
-gem install fake_sqs
+gem install fake_servicebus
 ```
 
 ## Running
 
 ```
-fake_sqs --database /path/to/database.yml
+fake_servicebus --database /path/to/database.yml
 ```
 
 ## Development

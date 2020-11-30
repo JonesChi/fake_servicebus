@@ -21,7 +21,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency "rack", "~> 1.6"
   gem.add_dependency "sinatra", "~> 1.4"
   gem.add_dependency "builder", "~> 3.2"
-  gem.add_dependency "nokogiri", "~> 1.11.0"
+  gem.add_dependency "nokogiri", "~> 1.11.0.rc3"
   gem.add_dependency "ruby-duration", "~> 3.2"
 
   gem.add_development_dependency "rspec", "~> 3.6"

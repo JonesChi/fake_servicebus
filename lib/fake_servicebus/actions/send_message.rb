@@ -5,7 +5,6 @@ module FakeServiceBus
       def initialize(options = {})
         @server    = options.fetch(:server)
         @queues    = options.fetch(:queues)
-        @responder = options.fetch(:responder)
         @request   = options.fetch(:request)
       end
 
@@ -15,10 +14,6 @@ module FakeServiceBus
             {'queue_name'=>queue_name,
              'body'=>@request.body.read})
         )
-        @responder.call :SendMessage do |xml|
-          xml.MD5OfMessageBody message.md5
-          xml.MessageId message.id
-        end
         201
       end
 

@@ -1,3 +1,4 @@
+require 'duration'
 require 'monitor'
 require 'securerandom'
 require 'fake_servicebus/collection_view'
@@ -11,24 +12,40 @@ module FakeServiceBus
 
   class Queue
 
-    VISIBILITY_TIMEOUT = 30
+    LOCK_DURATION = 60
 
-    attr_reader :name, :message_factory, :arn, :queue_attributes
+    attr_reader :name, :message_factory, :queue_attributes
 
     def initialize(options = {})
       @message_factory = options.fetch(:message_factory)
 
-      @name = options.fetch("queue_name")
-      @arn = options.fetch("Arn") { "arn:aws:sqs:us-east-1:#{SecureRandom.hex}:#{@name}" }
-      @queue_attributes = options.fetch("Attributes") { {} }
+      @name = options.fetch(:name)
+      @queue_attributes = default_attibutes.merge(options.fetch(:attributes){ {} })
       @lock = Monitor.new
       reset
+    end
+
+    def default_attibutes
+      {
+        "LockDuration" => "PT1M",
+        "MaxSizeInMegabytes" => 1024,
+        "RequiresDuplicateDetection" => false,
+        "RequiresSession" => false,
+        "DefaultMessageTimeToLive" => "P10675199DT2H48M5.4775807S",
+        "DeadLetteringOnMessageExpiration" => false,
+        "DuplicateDetectionHistoryTimeWindow" => "PT10M",
+        "MaxDeliveryCount" => 10,
+        "EnableBatchedOperations" => true,
+        "SizeInBytes" => 0,
+        "MessageCount" => 0,
+        "CreatedAt" => Time.now.utc.iso8601,
+        "UpdatedAt" => Time.now.utc.iso8601,
+      }
     end
 
     def to_yaml
       {
         "QueueName" => name,
-        "Arn" => arn,
         "Attributes" => queue_attributes,
       }
     end
@@ -39,9 +56,7 @@ module FakeServiceBus
 
     def attributes
       queue_attributes.merge(
-        "QueueArn" => arn,
-        "ApproximateNumberOfMessages" => published_size,
-        "ApproximateNumberOfMessagesNotVisible" => @messages_in_flight.size,
+        "MessageCount" => @messages.size + @messages_in_flight.size,
       )
     end
 
@@ -56,18 +71,16 @@ module FakeServiceBus
     end
 
     def receive_message(options = {})
-      visibility_timeout = Integer options.fetch("VisibilityTimeout") { default_visibility_timeout }
-
       return nil if @messages.empty?
 
       result = nil
       with_lock do
         published_messages = @messages.values.select { |m| m.published? }
 
-        message = published_messages.delete_at(rand(published_size))
+        message = published_messages.delete_at(0)
         @messages.delete(message.lock_token)
         unless check_message_for_dlq(message, options)
-          message.expire_at(visibility_timeout)
+          message.expire_at(lock_duration)
           message.receive!
           @messages_in_flight[message.lock_token] = message
           result = message
@@ -77,11 +90,11 @@ module FakeServiceBus
       result
     end
 
-    def default_visibility_timeout
-      if value = attributes['VisibilityTimeout']
-        value.to_i
+    def lock_duration
+      if value = attributes['LockDuration']
+        Duration.new(value).to_i
       else
-        VISIBILITY_TIMEOUT
+        LOCK_DURATION
       end
     end
 
@@ -112,10 +125,20 @@ module FakeServiceBus
       end
     end
 
+    def renew_lock_message(lock_token)
+
+      with_lock do
+        message = @messages_in_flight[lock_token]
+        raise MessageNotInflight unless message
+
+        message.expire_at(default_visibility_timeout)
+       end
+     end
+
     def check_message_for_dlq(message, options={})
-      if redrive_policy = queue_attributes["RedrivePolicy"] && JSON.parse(queue_attributes["RedrivePolicy"])
-        dlq = options[:queues].list.find{|queue| queue.arn == redrive_policy["deadLetterTargetArn"]}
-        if dlq && message.approximate_receive_count >= redrive_policy["maxReceiveCount"].to_i
+      if dlq_name = queue_attributes["ForwardDeadLetteredMessagesTo"]
+        dlq = options[:queues].list.find{|queue| queue.name == dlq_name}
+        if dlq && message.approximate_receive_count >= queue_attributes["MaxDeliveryCount"].to_i
           dlq.send_message(message: message)
           message.expire!
           true

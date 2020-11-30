@@ -7,7 +7,6 @@ module FakeServiceBus
       def initialize(options = {})
         @server    = options.fetch(:server)
         @queues    = options.fetch(:queues)
-        @responder = options.fetch(:responder)
         @start_ts  = Time.now.to_f
         @satisfied = false
       end

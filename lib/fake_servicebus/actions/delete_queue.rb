@@ -10,7 +10,7 @@ module FakeServiceBus
 
       def call(queue_name, params = {})
         @queues.delete(queue_name, params)
-        @responder.call queue_name
+        #@responder.call queue_name
       end
 
     end

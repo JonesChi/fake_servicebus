@@ -1,17 +1,17 @@
 module FakeServiceBus
   module Actions
-    class PurgeQueue
+    class RenewLockMessage
 
       def initialize(options = {})
         @server    = options.fetch(:server)
         @queues    = options.fetch(:queues)
-        @responder = options.fetch(:responder)
       end
 
-      def call(queue_name, params)
+      def call(queue_name, lock_token, params)
         queue = @queues.get(queue_name)
-        queue.reset()
-        @responder.call :PurgeQueue
+
+        queue.renew_lock_message(lock_token)
+        200
       end
 
     end

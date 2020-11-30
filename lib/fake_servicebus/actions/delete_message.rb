@@ -5,7 +5,6 @@ module FakeServiceBus
       def initialize(options = {})
         @server    = options.fetch(:server)
         @queues    = options.fetch(:queues)
-        @responder = options.fetch(:responder)
       end
 
       def call(queue_name, lock_token, params)

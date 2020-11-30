@@ -35,6 +35,10 @@ module FakeServiceBus
       200
     end
 
+    handle "/$Resources/Queues", [:get] do
+      settings.api.call(:ListQueues, request, params)
+    end
+
     handle "/:queue_name", [:put] do |queue_name|
       settings.api.call(:CreateQueue, request, queue_name, params)
     end
@@ -57,6 +61,10 @@ module FakeServiceBus
 
     handle "/:queue_name/messages/:sequence_number/:lock_token", [:put] do |queue_name, sequence_number, lock_token|
       settings.api.call(:UnlockMessage, request, queue_name, lock_token, params)
+    end
+
+    handle "/:queue_name/messages/:sequence_number/:lock_token", [:post] do |queue_name, sequence_number, lock_token|
+      settings.api.call(:RenewLockMessage, request, queue_name, lock_token, params)
     end
 
     handle "/:queue_name/messages/:sequence_number/:lock_token", [:delete] do |queue_name, sequence_number, lock_token|

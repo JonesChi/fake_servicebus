@@ -1,5 +1,3 @@
-require 'fake_servicebus/actions/change_message_visibility'
-require 'fake_servicebus/actions/change_message_visibility_batch'
 require 'fake_servicebus/actions/create_queue'
 require 'fake_servicebus/actions/delete_queue'
 require 'fake_servicebus/actions/list_queues'
@@ -7,13 +5,8 @@ require 'fake_servicebus/actions/get_queue'
 require 'fake_servicebus/actions/send_message'
 require 'fake_servicebus/actions/receive_message'
 require 'fake_servicebus/actions/unlock_message'
+require 'fake_servicebus/actions/renew_lock_message'
 require 'fake_servicebus/actions/delete_message'
-require 'fake_servicebus/actions/delete_message_batch'
-require 'fake_servicebus/actions/purge_queue'
-require 'fake_servicebus/actions/send_message_batch'
-require 'fake_servicebus/actions/get_queue_attributes'
-require 'fake_servicebus/actions/set_queue_attributes'
-require 'fake_servicebus/actions/list_dead_letter_source_queues'
 
 module FakeServiceBus
 
@@ -55,7 +48,6 @@ module FakeServiceBus
     end
 
     def attempt_once(action, *args)
-      puts *args
       queues.transaction do
         action.call(*args)
       end

@@ -7,7 +7,7 @@ require 'fake_servicebus'
 require 'optparse'
 
 options = {
-  :port => 4568,
+  :port => 10002,
   :host => "0.0.0.0",
   :verbose => false,
   :daemonize => false,
@@ -49,7 +49,7 @@ parser = OptionParser.new do |o|
   end
 
   o.on_tail "--version", "Shows the version" do
-    puts "fake_sqs version #{FakeSQS::VERSION}"
+    puts "fake_servicebus version #{FakeServiceBus::VERSION}"
     exit
   end
 

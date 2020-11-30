@@ -14,7 +14,7 @@ module FakeServiceBus
 
     def create(name, options = {})
       return database[name] if database[name]
-      queue = queue_factory.new(options)
+      queue = queue_factory.new(options.merge(:name=>name))
       database[name] = queue
     end
 

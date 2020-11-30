@@ -1,6 +1,6 @@
-# Fake Service Bus
+# Fake Service Bus [![Gem Version](https://badge.fury.io/rb/fake_servicebus.svg)](https://badge.fury.io/rb/fake_servicebus)
 
-Fake Service Bus is inspired by [Fake SQS](https://github.com/iain/fake_sqs) and it's also forked from [Fake SQS](https://github.com/iain/fake_sqs), thanks [Fake SQS](https://github.com/iain/fake_sqs).
+Fake Service Bus is inspired by [Fake SQS](https://github.com/iain/fake_sqs) and it's also forked from Fake SQS, thanks Fake SQS.
 
 Fake Service Bus is a lightweight server that mocks the Azure Service Bus API.
 
